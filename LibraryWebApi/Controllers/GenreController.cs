@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using LibraryWebApi.DataBaseContext;
 using LibraryWebApi.Model;
+using LibraryWebApi.Requests;
 namespace LibraryWebApi.Controllers
 {
     [ApiController]
@@ -9,7 +10,6 @@ namespace LibraryWebApi.Controllers
     public class GenreController : Controller
     {
         readonly LibraryWebApiDb _context;
-
         public GenreController(LibraryWebApiDb context)
         {
             _context = context;
@@ -23,32 +23,55 @@ namespace LibraryWebApi.Controllers
             {
                 genres = genres,
                 status = true
-
             });
         }
-        [HttpGet]
-        [Route("getBookbyId")]
-        public async Task<IActionResult> GetBookbyId(int id)
+        [HttpPost]
+        [Route("addNewGenre")]
+        public async Task<IActionResult> AddNewGenre(CreateGenre createdGenre)
         {
-            try
+            if (string.IsNullOrWhiteSpace(createdGenre.Name))
             {
-                var book = await _context.Books.FindAsync(id);
-                if (book == null)
-                {
-                    return NotFound(new { message = $"Книга с ID {id} не найдена." });
-                }
-                else
-                {
-                    return new OkObjectResult(book);
-                }
+                return BadRequest("fill in all fields");
             }
-            catch (Exception exception)
+            var check = await _context.Genre.FirstOrDefaultAsync(i => i.Name.ToLower() == createdGenre.Name.ToLower());
+            if (check != null)
             {
-                return StatusCode(500, new { message = $"Произошла ошибка на сервере. Попробуйте позже"});
+                return BadRequest("genre with that name already exists");
             }
-
-
-
+            var genre = new Genre() { Name = createdGenre.Name };
+            await _context.Genre.AddAsync(genre);
+            await _context.SaveChangesAsync();
+            return Ok(genre);
+        }
+        [HttpPut]
+        [Route("updateGenreById/{id}")]
+        public async Task<IActionResult> UpdateGenreById(int id, CreateGenre createdGenre)
+        {
+            if (string.IsNullOrWhiteSpace(createdGenre.Name))
+            {
+                return BadRequest("fill in all fields");
+            }
+            var  genre = await _context.Genre.FirstOrDefaultAsync(i => i.Id_Genre == id);
+            if (genre == null)
+            {
+                return BadRequest("genre with that id do not exists");
+            }
+            genre.Name= createdGenre.Name;
+            await _context.SaveChangesAsync();
+            return Ok(genre);
+        }
+        [HttpDelete]
+        [Route("deleteGenreById/{id}")]
+        public async Task<IActionResult> DeleteGenreById(int id)
+        {
+            var genre = await _context.Genre.FirstOrDefaultAsync(i => i.Id_Genre == id);
+            if (genre == null)
+            {
+                return BadRequest("genre with that id do not exists");
+            }
+            _context.Genre.Remove(genre);
+            _context.SaveChanges();
+            return Ok();
         }
     }
 }

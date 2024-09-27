@@ -15,5 +15,6 @@ namespace LibraryWebApi.DataBaseContext
         public DbSet<Books> Books { get; set; }
         public DbSet<RentHistory> RentHistory { get; set; }
         public DbSet<Genre> Genre { get; set; }
+        public DbSet<BookExemplar> BookExemplar { get; set;}
     }
 }
