@@ -57,11 +57,15 @@ namespace LibraryWebApi.Controllers
         [Route("updateBook/{id}")]
         public async Task<IActionResult> UpdateBook(int id, CreateBook book)
         {
+            var temp = await _context.Books.FirstOrDefaultAsync(b => b.Id_Book == id);
+            if(temp == null)
+            {
+                return BadRequest("book with that id don`t exists");
+            }
             if (string.IsNullOrWhiteSpace(book.Title) || string.IsNullOrWhiteSpace(book.Author) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Id_Genre)) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Year)))
             {
                 return BadRequest("fill in all fields");
             }
-            var temp = await _context.Books.FirstOrDefaultAsync(b => b.Id_Book == id);
 
 
             temp.Title = book.Title;

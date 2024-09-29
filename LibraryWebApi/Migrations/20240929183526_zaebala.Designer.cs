@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LibraryWebApi.Migrations
 {
     [DbContext(typeof(LibraryWebApiDb))]
-    [Migration("20240927182156_third")]
-    partial class third
+    [Migration("20240929183526_zaebala")]
+    partial class zaebala
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -95,30 +95,6 @@ namespace LibraryWebApi.Migrations
                     b.ToTable("Genre");
                 });
 
-            modelBuilder.Entity("LibraryWebApi.Model.Logins", b =>
-                {
-                    b.Property<int>("Id_login")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id_login"));
-
-                    b.Property<int>("Id_Reader")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Login")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id_login");
-
-                    b.ToTable("Logins");
-                });
-
             modelBuilder.Entity("LibraryWebApi.Model.Readers", b =>
                 {
                     b.Property<int>("Id_User")
@@ -127,10 +103,21 @@ namespace LibraryWebApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id_User"));
 
-                    b.Property<int>("Age")
+                    b.Property<DateTime>("Date_Birth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("Id_Role")
                         .HasColumnType("int");
 
+                    b.Property<string>("Login")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -153,8 +140,15 @@ namespace LibraryWebApi.Migrations
                     b.Property<int>("Id_Reader")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("Rental_End")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("Rental_Start")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Rental_Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Rental_Time")
                         .HasColumnType("int");
@@ -162,6 +156,23 @@ namespace LibraryWebApi.Migrations
                     b.HasKey("id_Rent");
 
                     b.ToTable("RentHistory");
+                });
+
+            modelBuilder.Entity("LibraryWebApi.Model.Roles", b =>
+                {
+                    b.Property<int>("Id_Role")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id_Role"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id_Role");
+
+                    b.ToTable("Roles");
                 });
 #pragma warning restore 612, 618
         }

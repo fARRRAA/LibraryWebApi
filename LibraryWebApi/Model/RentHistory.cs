@@ -15,7 +15,8 @@ namespace LibraryWebApi.Model
         [Required]
         [ForeignKey(name: "Books")]
         public int Id_Book { get; set; }
-
+        public DateTime Rental_End { get; set; }
+        public string Rental_Status {  get; set; }
         //public Readers Readers {  get; set; }
         //public Books Books { get; set; }
 

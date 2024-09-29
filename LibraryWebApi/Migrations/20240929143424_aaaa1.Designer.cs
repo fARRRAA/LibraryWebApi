@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LibraryWebApi.Migrations
 {
     [DbContext(typeof(LibraryWebApiDb))]
-    [Migration("20240926185246_first")]
-    partial class first
+    [Migration("20240929143424_aaaa1")]
+    partial class aaaa1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,28 @@ namespace LibraryWebApi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("LibraryWebApi.Model.BookExemplar", b =>
+                {
+                    b.Property<int>("Exemplar_Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Exemplar_Id"));
+
+                    b.Property<int>("Book_Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Books_Count")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Exemplar_Price")
+                        .HasColumnType("int");
+
+                    b.HasKey("Exemplar_Id");
+
+                    b.ToTable("BookExemplar");
+                });
 
             modelBuilder.Entity("LibraryWebApi.Model.Books", b =>
                 {
@@ -73,30 +95,6 @@ namespace LibraryWebApi.Migrations
                     b.ToTable("Genre");
                 });
 
-            modelBuilder.Entity("LibraryWebApi.Model.Logins", b =>
-                {
-                    b.Property<int>("Id_login")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id_login"));
-
-                    b.Property<int>("Id_Reader")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Login")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id_login");
-
-                    b.ToTable("Logins");
-                });
-
             modelBuilder.Entity("LibraryWebApi.Model.Readers", b =>
                 {
                     b.Property<int>("Id_User")
@@ -105,10 +103,21 @@ namespace LibraryWebApi.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id_User"));
 
-                    b.Property<int>("Age")
+                    b.Property<DateTime>("Date_Birth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Id_Role")
                         .HasColumnType("int");
 
+                    b.Property<string>("Login")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -140,6 +149,23 @@ namespace LibraryWebApi.Migrations
                     b.HasKey("id_Rent");
 
                     b.ToTable("RentHistory");
+                });
+
+            modelBuilder.Entity("LibraryWebApi.Model.Roles", b =>
+                {
+                    b.Property<int>("Id_Role")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id_Role"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id_Role");
+
+                    b.ToTable("Roles");
                 });
 #pragma warning restore 612, 618
         }
