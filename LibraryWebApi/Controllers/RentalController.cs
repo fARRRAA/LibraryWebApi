@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LibraryWebApi.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class RentalController : Controller
     {
         readonly LibraryWebApiDb _context;

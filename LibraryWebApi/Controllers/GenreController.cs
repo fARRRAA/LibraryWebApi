@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using LibraryWebApi.DataBaseContext;
 using LibraryWebApi.Model;
 using LibraryWebApi.Requests;
+using Microsoft.AspNetCore.Authorization;
 namespace LibraryWebApi.Controllers
 {
     [ApiController]
@@ -14,6 +15,7 @@ namespace LibraryWebApi.Controllers
         {
             _context = context;
         }
+        [Authorize]
         [HttpGet]
         [Route("getAllGenres")]
         public async Task<IActionResult> GetAllGenres()

@@ -28,7 +28,7 @@ namespace LibraryWebApi.Controllers
         [HttpPost("addNewReader")]
         public async Task<IActionResult> AddNewReader(createReader reader)
         {
-            var check = await _context.Readers.FirstOrDefaultAsync(r => r.Login == reader.Login && r.Password == reader.Password);
+            var check = await _context.Readers.FirstOrDefaultAsync(r => r.Login == reader.Login);
             if (check != null)
             {
                 return BadRequest("reader with that login and password already exists");
