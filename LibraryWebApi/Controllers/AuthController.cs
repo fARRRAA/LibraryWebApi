@@ -40,7 +40,7 @@ namespace LibraryWebApi.Controllers
             var Reader = new Readers()
             {
                 Name = reader.Name,
-                Password = hashedPassword,
+                Password = reader.Password,
                 Date_Birth = reader.Date_Birth,
                 Login = reader.Login,
                 Id_Role = 2
@@ -59,8 +59,8 @@ namespace LibraryWebApi.Controllers
             {
                 return NotFound("reader not found");
             }
-            var res = Verify(password, check.Password);
-            if (res == false)
+            //var res = Verify(password, check.Password);
+            if (password!=check.Password)
             {
                 return NotFound("wrong password");
             }
@@ -70,12 +70,19 @@ namespace LibraryWebApi.Controllers
             return Ok(token);
 
         }
+
+
+
         public string Generate(string password) => BCrypt.Net.BCrypt.EnhancedHashPassword(password);
         public bool Verify(string password, string hashPassword) => BCrypt.Net.BCrypt.EnhancedVerify(password, hashPassword);
 
         public string GenerateToken(Readers reader)
         {
-            Claim[] claims = [new("userId", reader.Id_User.ToString())];
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.Authentication, reader.Id_User.ToString()),
+                new(ClaimTypes.Role, reader.Id_Role switch { 1 => "admin", 2 => "reader" })
+            };
 
             var signingCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
                 SecurityAlgorithms.HmacSha256);

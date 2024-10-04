@@ -11,11 +11,16 @@ namespace LibraryWebApi.Controllers
     public class GenreController : Controller
     {
         readonly LibraryWebApiDb _context;
-        public GenreController(LibraryWebApiDb context)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public Check Check;
+
+        public GenreController(LibraryWebApiDb context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
+            Check = new Check(httpContextAccessor);
         }
-        [Authorize]
         [HttpGet]
         [Route("getAllGenres")]
         public async Task<IActionResult> GetAllGenres()
@@ -27,10 +32,16 @@ namespace LibraryWebApi.Controllers
                 status = true
             });
         }
+        [Authorize]
         [HttpPost]
         [Route("addNewGenre")]
         public async Task<IActionResult> AddNewGenre(CreateGenre createdGenre)
         {
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return Unauthorized("only admin could do this");
+            }
             if (string.IsNullOrWhiteSpace(createdGenre.Name))
             {
                 return BadRequest("fill in all fields");
@@ -45,10 +56,16 @@ namespace LibraryWebApi.Controllers
             await _context.SaveChangesAsync();
             return Ok(genre);
         }
+        [Authorize]
         [HttpPut]
         [Route("updateGenreById/{id}")]
         public async Task<IActionResult> UpdateGenreById(int id, CreateGenre createdGenre)
         {
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return Unauthorized("only admin could do this");
+            }
             if (string.IsNullOrWhiteSpace(createdGenre.Name))
             {
                 return BadRequest("fill in all fields");
@@ -62,10 +79,16 @@ namespace LibraryWebApi.Controllers
             await _context.SaveChangesAsync();
             return Ok(genre);
         }
+        [Authorize]
         [HttpDelete]
         [Route("deleteGenreById/{id}")]
         public async Task<IActionResult> DeleteGenreById(int id)
         {
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return Unauthorized("only admin could do this");
+            }
             var genre = await _context.Genre.FirstOrDefaultAsync(i => i.Id_Genre == id);
             if (genre == null)
             {

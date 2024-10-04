@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using LibraryWebApi.DataBaseContext;
 using LibraryWebApi.Model;
 using LibraryWebApi.Requests;
+using Microsoft.AspNetCore.Authorization;
+using LibraryWebApi.Controllers;
 //using LibraryWebApi.Requests;
 namespace LibraryWebApi.Controllers
 {
@@ -11,15 +13,25 @@ namespace LibraryWebApi.Controllers
     public class BooksController : Controller
     {
         readonly LibraryWebApiDb _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public Check Check;
 
-        public BooksController(LibraryWebApiDb context)
+        public BooksController(LibraryWebApiDb context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
+            Check = new Check(httpContextAccessor);
         }
+
         [HttpGet]
         [Route("getAllBooks")]
         public async Task<IActionResult> GetAllBooks()
         {
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return Unauthorized("only admin could do this");
+            }
             var books = await _context.Books.ToListAsync();
             return new OkObjectResult(new
             {
@@ -28,10 +40,16 @@ namespace LibraryWebApi.Controllers
 
             });
         }
+        [Authorize]
         [HttpPost]
         [Route("addNewBook")]
         public async Task<IActionResult> AddNewBook(CreateBook book)
         {
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return Unauthorized("only admin could do this");
+            }
             if (string.IsNullOrWhiteSpace(book.Title) || string.IsNullOrWhiteSpace(book.Author) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Id_Genre)) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Year)))
             {
                 return BadRequest("fill in all fields");
@@ -53,12 +71,18 @@ namespace LibraryWebApi.Controllers
             await _context.SaveChangesAsync();
             return Ok();
         }
+        [Authorize]
         [HttpPut]
         [Route("updateBook/{id}")]
         public async Task<IActionResult> UpdateBook(int id, CreateBook book)
         {
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return Unauthorized("only admin could do this");
+            }
             var temp = await _context.Books.FirstOrDefaultAsync(b => b.Id_Book == id);
-            if(temp == null)
+            if (temp == null)
             {
                 return BadRequest("book with that id don`t exists");
             }
@@ -77,10 +101,17 @@ namespace LibraryWebApi.Controllers
             await _context.SaveChangesAsync();
             return Ok();
         }
+        [Authorize]
         [HttpDelete]
         [Route("deleteBook/{id}")]
         public async Task<ActionResult> DeleteBook(int id)
         {
+
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return Unauthorized("only admin could do this");
+            }
             var temp = await _context.Books.FirstOrDefaultAsync(b => b.Id_Book == id);
             if (temp == null)
             {
@@ -90,6 +121,7 @@ namespace LibraryWebApi.Controllers
             _context.SaveChanges();
             return Ok();
         }
+
         [HttpGet]
         [Route("getBooksByGenre/{id}")]
         public async Task<IActionResult> GetBooksByGenre(int id)
@@ -132,40 +164,38 @@ namespace LibraryWebApi.Controllers
         [Route("getExemplar/{bookId}")]
         public async Task<IActionResult> GetExemplar(int bookId)
         {
-            var  book = await _context.Books.FirstOrDefaultAsync(i=>i.Id_Book== bookId);
-            var exemplarBook= await _context.BookExemplar.FirstOrDefaultAsync(i => i.Book_Id == bookId);
-            if (book == null ||exemplarBook==null)
+            var book = await _context.Books.FirstOrDefaultAsync(i => i.Id_Book == bookId);
+            var exemplarBook = await _context.BookExemplar.FirstOrDefaultAsync(i => i.Book_Id == bookId);
+            if (book == null || exemplarBook == null)
             {
                 return BadRequest("could not find exemplars of this book");
             }
             return new OkObjectResult(new
             {
-                exemplar=exemplarBook,
-                book=book
+                exemplar = exemplarBook,
+                book = book
             });
 
         }
+        [Authorize]
         [HttpGet]
         [Route("getBookbyId")]
         public async Task<IActionResult> GetBookbyId(int id)
         {
-            try
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
             {
-                var book = await _context.Books.FindAsync(id);
-                if (book == null)
-                {
-                    return NotFound(new { message = $"Книга с ID {id} не найдена." });
-                }
-                else
-                {
-                    return new OkObjectResult(book);
-                }
+                return Unauthorized("only admin could do this");
             }
-            catch (Exception exception)
+            var book = await _context.Books.FirstOrDefaultAsync(b=>b.Id_Book==id);
+            if (book == null)
             {
-                return StatusCode(500, new { message = $"Произошла ошибка на сервере. Попробуйте позже" });
+                return NotFound(new { message = $"Книга с ID {id} не найдена." });
             }
-
+            else
+            {
+                return new OkObjectResult(book);
+            }
 
 
         }

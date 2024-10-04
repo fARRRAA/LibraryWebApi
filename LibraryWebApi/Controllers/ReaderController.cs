@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using LibraryWebApi.DataBaseContext;
 using LibraryWebApi.Model;
 using LibraryWebApi.Requests;
+using Microsoft.AspNetCore.Authorization;
 namespace LibraryWebApi.Controllers
 {
     [ApiController]
@@ -10,14 +11,26 @@ namespace LibraryWebApi.Controllers
     public class ReaderController : Controller
     {
         readonly LibraryWebApiDb _context;
-        public ReaderController(LibraryWebApiDb context)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public Check Check;
+
+        public ReaderController(LibraryWebApiDb context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
+            Check = new Check(httpContextAccessor);
         }
 
+        [Authorize]
         [HttpGet("getAllReaders")]
         public async Task<ActionResult> GetAllReaders()
         {
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return Unauthorized("only admin could do this");
+            }
             var users = _context.Readers.ToListAsync();
             return new OkObjectResult(new
             {
@@ -25,9 +38,15 @@ namespace LibraryWebApi.Controllers
 
             });
         }
+        [Authorize]
         [HttpPost("addNewReader")]
         public async Task<IActionResult> AddNewReader(createReader reader)
         {
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return Unauthorized("only admin could do this");
+            }
             var check = await _context.Readers.FirstOrDefaultAsync(r => r.Login == reader.Login);
             if (check != null)
             {
@@ -49,9 +68,15 @@ namespace LibraryWebApi.Controllers
             await _context.SaveChangesAsync();
             return Ok(Reader);
         }
+        [Authorize]
         [HttpGet("getReaderById{id}")]
         public async Task<IActionResult> GetReaderById(int id)
         {
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return Unauthorized("only admin could do this");
+            }
             var check = await _context.Readers.FirstOrDefaultAsync(r => r.Id_User == id);
             if (check == null)
             {
@@ -59,9 +84,11 @@ namespace LibraryWebApi.Controllers
             }
             return Ok(check);
         }
+        [Authorize]
         [HttpPut("updateReaderById/{id}")]
         public async Task<IActionResult> UpdateReaderById(int id, createReader reader)
         {
+
             var check = await _context.Readers.FirstOrDefaultAsync(r => r.Id_User == id);
             if (check == null)
             {
@@ -78,9 +105,15 @@ namespace LibraryWebApi.Controllers
             await _context.SaveChangesAsync();
             return Ok(check);
         }
+        [Authorize]
         [HttpDelete("deleteReaderById/{id}")]
         public async Task<IActionResult> DeleteReaderById(int id)
         {
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return Unauthorized("only admin could do this");
+            }
             var check = await _context.Readers.FirstOrDefaultAsync(r => r.Id_User == id);
             if (check == null)
             {
@@ -90,10 +123,11 @@ namespace LibraryWebApi.Controllers
             _context.SaveChanges();
             return Ok("reader has been successfully removed");
         }
-
+        [Authorize]
         [HttpGet("getReadersBooks/{id}")]
         public async Task<IActionResult> GetReadersRentals(int id)
         {
+
             var check = await _context.Readers.FirstOrDefaultAsync(r => r.Id_User == id);
             if (check == null)
             {

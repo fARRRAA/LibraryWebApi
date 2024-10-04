@@ -1,5 +1,6 @@
 ﻿using LibraryWebApi.DataBaseContext;
 using LibraryWebApi.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,11 +11,16 @@ namespace LibraryWebApi.Controllers
     public class RentalController : Controller
     {
         readonly LibraryWebApiDb _context;
-        public RentalController(LibraryWebApiDb context)
+        public Check Check;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public RentalController(LibraryWebApiDb context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
+            Check = new Check(httpContextAccessor);
         }
-
+        [Authorize]
         [HttpPost("RentBookById/{id}")]
         public async Task<IActionResult> RentBookById(int id, int readerId, int rentalTime)
         {
@@ -59,6 +65,7 @@ namespace LibraryWebApi.Controllers
 
             return Ok(rental);
         }
+        [Authorize]
         [HttpGet("getReadersRentals/{id}")]
         public async Task<IActionResult> GetReadersRentals(int id)
         {
@@ -69,6 +76,7 @@ namespace LibraryWebApi.Controllers
             }
             return Ok(_context.RentHistory.Where(r => r.Id_Reader == check.Id_Reader));
         }
+        [Authorize]
         [HttpPost("returnRent{rentId}")]
         public async Task<IActionResult> ReturnRent(int rentId)
         {
@@ -83,14 +91,26 @@ namespace LibraryWebApi.Controllers
             await _context.SaveChangesAsync();
             return Ok("book successfully returned");
         }
+        [Authorize]
         [HttpGet("getCurrentRentals")]
         public async Task<IActionResult> GetCurrentRentals()
         {
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return Unauthorized("only admin could do this");
+            }
             return Ok(_context.RentHistory.Where(r => r.Rental_Status == "нет"));
         }
+        [Authorize]
         [HttpGet("getBookRentals/{id}")]
         public async Task<IActionResult> GetBookRentals(int id)
         {
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return Unauthorized("only admin could do this");
+            }
             var check= await _context.Books.FirstOrDefaultAsync(b=>b.Id_Book==id);
             if (check == null)
             {
