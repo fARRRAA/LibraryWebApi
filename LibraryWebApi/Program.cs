@@ -33,16 +33,30 @@ namespace LibraryWebApi
                     {
                         OnMessageReceived = context =>
                         {
-                            context.Token = context.Request.Cookies["wild-cookies"];
+                            var authorizationHeader = context.Request.Headers["Authorization"].ToString();
+                            if (!string.IsNullOrEmpty(authorizationHeader) && authorizationHeader.StartsWith("Bearer "))
+                            {
+                                context.Token = authorizationHeader.Substring("Bearer ".Length).Trim();
+                            }
                             return Task.CompletedTask;
                         }
+                    
                     };
 
                 });
 
-
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAllOrigins",
+                    builder =>
+                    {
+                        builder.AllowAnyOrigin()
+                               .AllowAnyMethod()
+                               .AllowAnyHeader();
+                    });
+            });
             builder.Services.AddDbContext<LibraryWebApiDb>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("TestDbString")), ServiceLifetime.Scoped);
+     options.UseSqlServer(builder.Configuration.GetConnectionString("TestDbString")), ServiceLifetime.Scoped);
 
             var app = builder.Build();
 
@@ -57,11 +71,11 @@ namespace LibraryWebApi
             app.UseCookiePolicy(new CookiePolicyOptions
             {
                 MinimumSameSitePolicy = SameSiteMode.Strict,
-                HttpOnly= HttpOnlyPolicy.Always,
-                Secure= CookieSecurePolicy.Always
+                HttpOnly = HttpOnlyPolicy.Always,
+                Secure = CookieSecurePolicy.Always
             });
 
-
+            app.UseCors("AllowAllOrigins");
             app.UseAuthentication();
             app.UseAuthorization();
 

@@ -27,11 +27,7 @@ namespace LibraryWebApi.Controllers
         [Route("getAllBooks")]
         public async Task<IActionResult> GetAllBooks()
         {
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
-            {
-                return Unauthorized("only admin could do this");
-            }
+
             var books = await _context.Books.ToListAsync();
             return new OkObjectResult(new
             {

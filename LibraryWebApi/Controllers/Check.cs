@@ -15,7 +15,9 @@ namespace LibraryWebApi.Controllers
 
         public bool IsUserAdmin()
         {
-            var cookieValue = _httpContextAccessor.HttpContext.Request.Cookies["wild-cookies"];
+            var authorizationHeader = _httpContextAccessor.HttpContext.Request.Headers["Authorization"].ToString();
+
+            var cookieValue = authorizationHeader;
 
             if (string.IsNullOrEmpty(cookieValue))
             {

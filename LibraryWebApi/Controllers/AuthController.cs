@@ -66,7 +66,7 @@ namespace LibraryWebApi.Controllers
             }
             var token = GenerateToken(check);
             var httpContext = _httpContextAccessor.HttpContext;
-            httpContext.Response.Cookies.Append("wild-cookies", token);
+            httpContext.Response.Headers.Add("Authorization",$"{token}");
             return Ok(token);
 
         }
