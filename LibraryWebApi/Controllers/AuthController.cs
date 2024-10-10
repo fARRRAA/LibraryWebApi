@@ -29,11 +29,18 @@ namespace LibraryWebApi.Controllers
             var check = await _context.Readers.FirstOrDefaultAsync(r => r.Login == reader.Login && r.Password == reader.Password);
             if (check != null)
             {
-                return NotFound("reader with that login and password already exists");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("reader with that login and password already exists")
+                });
             }
             if (string.IsNullOrWhiteSpace(reader.Name) || string.IsNullOrWhiteSpace(reader.Password) || string.IsNullOrWhiteSpace(reader.Login) || string.IsNullOrWhiteSpace(reader.Date_Birth.ToString()))
             {
-                return NotFound("fill in all fields");
+                return new OkObjectResult(new
+                {
+                    error = BadRequest("fill in all fields")
+                });
+
             }
             var hashedPassword = Generate(reader.Password);
 
@@ -47,9 +54,10 @@ namespace LibraryWebApi.Controllers
             };
             await _context.Readers.AddAsync(Reader);
             await _context.SaveChangesAsync();
-            return Ok(Reader);
-
-
+            return new OkObjectResult(new
+            {
+                reader = reader
+            });
         }
         [HttpGet("loginReader")]
         public async Task<ActionResult> Login(string login, string password)
@@ -57,18 +65,26 @@ namespace LibraryWebApi.Controllers
             var check = await _context.Readers.FirstOrDefaultAsync(r => r.Login == login);
             if (check == null)
             {
-                return NotFound("reader not found");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("reader not found")
+                });
             }
             //var res = Verify(password, check.Password);
-            if (password!=check.Password)
+            if (password != check.Password)
             {
-                return NotFound("wrong password");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("wrong password")
+                });
             }
             var token = GenerateToken(check);
             var httpContext = _httpContextAccessor.HttpContext;
-            httpContext.Response.Headers.Add("Authorization",$"{token}");
-            return Ok(token);
-
+            httpContext.Response.Headers.Add("Authorization", $"{token}");
+            return new OkObjectResult(new
+            {
+                token = token
+            });
         }
 
 

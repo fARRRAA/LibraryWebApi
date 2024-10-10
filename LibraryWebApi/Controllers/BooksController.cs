@@ -5,6 +5,7 @@ using LibraryWebApi.Model;
 using LibraryWebApi.Requests;
 using Microsoft.AspNetCore.Authorization;
 using LibraryWebApi.Controllers;
+using static System.Reflection.Metadata.BlobBuilder;
 //using LibraryWebApi.Requests;
 namespace LibraryWebApi.Controllers
 {
@@ -25,10 +26,16 @@ namespace LibraryWebApi.Controllers
 
         [HttpGet]
         [Route("getAllBooks")]
-        public async Task<IActionResult> GetAllBooks()
+        public async Task<IActionResult> GetAllBooks([FromQuery] string? author, [FromQuery] string? genre, [FromQuery] int? year)
         {
-
-            var books = await _context.Books.ToListAsync();
+            if (!string.IsNullOrEmpty(author))
+            {
+                return new OkObjectResult(new
+                {
+                    books = _context.Books.Where(b=>b.Author==author)
+                });
+            }
+            var books = await _context.Books.Include(b=>b.Genre).ToListAsync();
             return new OkObjectResult(new
             {
                 books = books,
@@ -44,16 +51,26 @@ namespace LibraryWebApi.Controllers
             bool admin = Check.IsUserAdmin();
             if (!admin)
             {
-                return Unauthorized("only admin could do this");
+                return new OkObjectResult(new
+                {
+                    error = Unauthorized("only admin could do this")
+                });
+
             }
             if (string.IsNullOrWhiteSpace(book.Title) || string.IsNullOrWhiteSpace(book.Author) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Id_Genre)) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Year)))
             {
-                return BadRequest("fill in all fields");
+                return new OkObjectResult(new
+                {
+                    error = BadRequest("fill in all fields")
+                });
             }
             var temp = await _context.Books.FirstOrDefaultAsync(b => b.Title == book.Title && b.Author == book.Author);
             if (temp != null)
             {
-                return NotFound("this book is already exists");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("this book is already exists")
+                });
             }
             var Book = new Books()
             {
@@ -75,16 +92,26 @@ namespace LibraryWebApi.Controllers
             bool admin = Check.IsUserAdmin();
             if (!admin)
             {
-                return Unauthorized("only admin could do this");
+                return new OkObjectResult(new
+                {
+                    error = Unauthorized("only admin could do this")
+                });
             }
             var temp = await _context.Books.FirstOrDefaultAsync(b => b.Id_Book == id);
             if (temp == null)
             {
-                return BadRequest("book with that id don`t exists");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("book with that id don`t exists")
+                });
             }
             if (string.IsNullOrWhiteSpace(book.Title) || string.IsNullOrWhiteSpace(book.Author) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Id_Genre)) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Year)))
             {
-                return BadRequest("fill in all fields");
+                return new OkObjectResult(new
+                {
+                    error = BadRequest("fill in all fields")
+                });
+
             }
 
 
@@ -106,12 +133,18 @@ namespace LibraryWebApi.Controllers
             bool admin = Check.IsUserAdmin();
             if (!admin)
             {
-                return Unauthorized("only admin could do this");
+                return new OkObjectResult(new
+                {
+                    error = Unauthorized("only admin could do this")
+                });
             }
             var temp = await _context.Books.FirstOrDefaultAsync(b => b.Id_Book == id);
             if (temp == null)
             {
-                return BadRequest($"book with id {id} don`t exist");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("book with that id don`t exists")
+                });
             }
             _context.Books.Remove(temp);
             _context.SaveChanges();
@@ -125,9 +158,15 @@ namespace LibraryWebApi.Controllers
             var genre = await _context.Genre.FirstOrDefaultAsync(g => g.Id_Genre == id);
             if (genre == null)
             {
-                return BadRequest($"not found genre with id {id}");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("genre with that id don`t exists")
+                });
             }
-            return Ok(_context.Books.Where(i => i.Id_Genre == id));
+            return new OkObjectResult(new
+            {
+                books = _context.Books.Where(i => i.Id_Genre == id)
+            });
         }
         [HttpGet]
         [Route("getBooksByAuthor/{author}")]
@@ -137,8 +176,17 @@ namespace LibraryWebApi.Controllers
             var nameParts = author.ToLower().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
             var books = await _context.Books.Where(i => nameParts.All(part => i.Author.ToLower().Contains(part))).ToListAsync();
-
-            return Ok(books);
+            if (books == null)
+            {
+                return new OkObjectResult(new
+                {
+                    error = NotFound("not found book with that author")
+                });
+            }
+            return new OkObjectResult(new
+            {
+                books = books
+            });
         }
         [HttpGet]
         [Route("getBooksByName/{name}")]
@@ -147,14 +195,34 @@ namespace LibraryWebApi.Controllers
             var nameParts = name.ToLower().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
             var books = await _context.Books.Where(i => nameParts.Any(part => i.Title.ToLower().Contains(part))).ToListAsync();
-            return Ok(books);
+            if (books == null)
+            {
+                return new OkObjectResult(new
+                {
+                    error = NotFound("not found book with that name")
+                });
+            }
+            return new OkObjectResult(new
+            {
+                books = books
+            });
         }
         [HttpGet]
         [Route("getAllExemplars")]
         public async Task<IActionResult> GetALlExemplars()
         {
             var allCopies = await _context.BookExemplar.ToListAsync();
-            return Ok(allCopies);
+            if (allCopies == null)
+            {
+                return new OkObjectResult(new
+                {
+                    error = NotFound("not found exemplars")
+                });
+            }
+            return new OkObjectResult(new
+            {
+                copies = allCopies
+            });
         }
         [HttpGet]
         [Route("getExemplar/{bookId}")]
@@ -164,7 +232,11 @@ namespace LibraryWebApi.Controllers
             var exemplarBook = await _context.BookExemplar.FirstOrDefaultAsync(i => i.Book_Id == bookId);
             if (book == null || exemplarBook == null)
             {
-                return BadRequest("could not find exemplars of this book");
+                return new OkObjectResult(new
+                {
+                    error = BadRequest("could not find exemplars of this book")
+                });
+
             }
             return new OkObjectResult(new
             {
@@ -181,16 +253,27 @@ namespace LibraryWebApi.Controllers
             bool admin = Check.IsUserAdmin();
             if (!admin)
             {
-                return Unauthorized("only admin could do this");
+                {
+                    return new OkObjectResult(new
+                    {
+                        error = Unauthorized("only admin could do this")
+                    });
+                }
             }
-            var book = await _context.Books.FirstOrDefaultAsync(b=>b.Id_Book==id);
+            var book = await _context.Books.FirstOrDefaultAsync(b => b.Id_Book == id);
             if (book == null)
             {
-                return NotFound(new { message = $"Книга с ID {id} не найдена." });
+                return new OkObjectResult(new
+                {
+                    error = NotFound(new { message = $"Книга с ID {id} не найдена." })
+                });
             }
             else
             {
-                return new OkObjectResult(book);
+                return new OkObjectResult(new
+                {
+                    book = book
+                });
             }
 
 

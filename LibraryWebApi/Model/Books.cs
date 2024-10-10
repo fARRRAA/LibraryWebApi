@@ -9,9 +9,11 @@ namespace LibraryWebApi.Model
         [Key]
         public int Id_Book { get; set; }
         public string Author { get; set; }
-        [Required]
+
         [ForeignKey("Genres")]
         public int Id_Genre { get; set; }
+        [NotMapped]
+        public Genre Genre { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
         public DateTime Year { get; set; }

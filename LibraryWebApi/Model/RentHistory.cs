@@ -9,16 +9,21 @@ namespace LibraryWebApi.Model
         public int id_Rent { get; set; }
         public DateTime Rental_Start { get; set; }
         public int Rental_Time { get; set; }
-        [Required]
+
+
         [ForeignKey("Readers")]
         public int Id_Reader { get; set; }
-        [Required]
+        [NotMapped]
+        public Readers Reader {  get; set; }
+
+
         [ForeignKey(name: "Books")]
         public int Id_Book { get; set; }
+        [NotMapped]
+        public Books Book { get; set; }
         public DateTime Rental_End { get; set; }
         public string Rental_Status {  get; set; }
-        //public Readers Readers {  get; set; }
-        //public Books Books { get; set; }
+
 
     }
 }

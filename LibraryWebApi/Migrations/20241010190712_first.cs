@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LibraryWebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class aaaa1 : Migration
+    public partial class first : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -66,7 +66,7 @@ namespace LibraryWebApi.Migrations
                     Date_Birth = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Login = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Id_Role = table.Column<int>(type: "int", nullable: false)
+                    Id_Role = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -82,7 +82,9 @@ namespace LibraryWebApi.Migrations
                     Rental_Start = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Rental_Time = table.Column<int>(type: "int", nullable: false),
                     Id_Reader = table.Column<int>(type: "int", nullable: false),
-                    Id_Book = table.Column<int>(type: "int", nullable: false)
+                    Id_Book = table.Column<int>(type: "int", nullable: false),
+                    Rental_End = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Rental_Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {

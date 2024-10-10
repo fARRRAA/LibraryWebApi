@@ -26,10 +26,16 @@ namespace LibraryWebApi.Controllers
         public async Task<IActionResult> GetAllGenres()
         {
             var genres = await _context.Genre.ToListAsync();
+            if (genres == null)
+            {
+                return new OkObjectResult(new
+                {
+                    error = NotFound("could not find genres")
+                });
+            }
             return new OkObjectResult(new
             {
-                genres = genres,
-                status = true
+                genres = genres
             });
         }
         [Authorize]
@@ -40,21 +46,32 @@ namespace LibraryWebApi.Controllers
             bool admin = Check.IsUserAdmin();
             if (!admin)
             {
-                return Unauthorized("only admin could do this");
+                return new OkObjectResult(new
+                {
+                    error = Unauthorized("only admin could do this")
+                });
+
             }
             if (string.IsNullOrWhiteSpace(createdGenre.Name))
             {
-                return BadRequest("fill in all fields");
+                return new OkObjectResult(new
+                {
+                    error = BadRequest("fill in all fields")
+
+                });
             }
             var check = await _context.Genre.FirstOrDefaultAsync(i => i.Name.ToLower() == createdGenre.Name.ToLower());
             if (check != null)
             {
-                return BadRequest("genre with that name already exists");
+                return new OkObjectResult(new
+                {
+                    error= NotFound("genre with that name already exists")
+                });
             }
             var genre = new Genre() { Name = createdGenre.Name };
             await _context.Genre.AddAsync(genre);
             await _context.SaveChangesAsync();
-            return Ok(genre);
+            return Ok();
         }
         [Authorize]
         [HttpPut]
@@ -64,20 +81,30 @@ namespace LibraryWebApi.Controllers
             bool admin = Check.IsUserAdmin();
             if (!admin)
             {
-                return Unauthorized("only admin could do this");
+                return new OkObjectResult(new
+                {
+                    error = Unauthorized("only admin could do this")
+                });
+
             }
             if (string.IsNullOrWhiteSpace(createdGenre.Name))
             {
-                return BadRequest("fill in all fields");
+                return new OkObjectResult(new 
+                {
+                    error=BadRequest("fill in all fields")
+                });
             }
-            var  genre = await _context.Genre.FirstOrDefaultAsync(i => i.Id_Genre == id);
+            var genre = await _context.Genre.FirstOrDefaultAsync(i => i.Id_Genre == id);
             if (genre == null)
             {
-                return BadRequest("genre with that id do not exists");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("genre with that id do not exists")
+                });
             }
-            genre.Name= createdGenre.Name;
+            genre.Name = createdGenre.Name;
             await _context.SaveChangesAsync();
-            return Ok(genre);
+            return Ok();
         }
         [Authorize]
         [HttpDelete]
@@ -87,13 +114,19 @@ namespace LibraryWebApi.Controllers
             bool admin = Check.IsUserAdmin();
             if (!admin)
             {
-                return Unauthorized("only admin could do this");
+                return new OkObjectResult(new
+                {
+                    error = Unauthorized("only admin could do this")
+                });
+
             }
             var genre = await _context.Genre.FirstOrDefaultAsync(i => i.Id_Genre == id);
             if (genre == null)
             {
-                return BadRequest("genre with that id do not exists");
-            }
+                return new OkObjectResult(new
+                {
+                    error = NotFound("genre with that id do not exists")
+                });            }
             _context.Genre.Remove(genre);
             _context.SaveChanges();
             return Ok();

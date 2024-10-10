@@ -12,6 +12,8 @@ namespace LibraryWebApi.Model
         public string Password { get; set; }
         [ForeignKey("Roles")]
         public int? Id_Role { get; set; } = 2;
+        [NotMapped]
+        public Roles Role { get; set; }
 
     }
 }

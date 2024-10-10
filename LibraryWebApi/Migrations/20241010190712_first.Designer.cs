@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LibraryWebApi.Migrations
 {
     [DbContext(typeof(LibraryWebApiDb))]
-    [Migration("20240929183526_zaebala")]
-    partial class zaebala
+    [Migration("20241010190712_first")]
+    partial class first
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

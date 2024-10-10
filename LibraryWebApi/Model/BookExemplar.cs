@@ -8,9 +8,11 @@ namespace LibraryWebApi.Model
         [Key]
         public int Exemplar_Id { get; set; }
         public int Books_Count { get; set; }
-        [Required]
+
         [ForeignKey("Books")]
         public int Book_Id { get; set; }
+        [NotMapped]
+        public Books Book { get; set; }
         public int Exemplar_Price { get; set; }
     }
 }

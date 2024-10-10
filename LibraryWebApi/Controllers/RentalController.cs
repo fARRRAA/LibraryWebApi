@@ -24,31 +24,47 @@ namespace LibraryWebApi.Controllers
         [HttpPost("RentBookById/{id}")]
         public async Task<IActionResult> RentBookById(int id, int readerId, int rentalTime)
         {
-            if(string.IsNullOrWhiteSpace(Convert.ToString(readerId))|| string.IsNullOrWhiteSpace(Convert.ToString(rentalTime)))
+            if (string.IsNullOrWhiteSpace(Convert.ToString(readerId)) || string.IsNullOrWhiteSpace(Convert.ToString(rentalTime)))
             {
-                return BadRequest("fill in all fields");
+                return new OkObjectResult(new
+                {
+                    error = BadRequest("fill in all fields")
+                });
             }
             var checkRent = await _context.RentHistory.FirstOrDefaultAsync(r => r.Id_Reader == readerId && r.Id_Book == id);
             if (checkRent != null)
             {
-                return NotFound("you already rent this book");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("you already rent this book")
+                });
+
             }
             var checkBook = await _context.Books.FirstOrDefaultAsync(b => b.Id_Book == id);
             if (checkBook == null)
             {
-                return NotFound("could not find book with that id");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("could not find book with that id")
+                });
             }
             var checkReader = await _context.Readers.FirstOrDefaultAsync(r => r.Id_User == readerId);
             if (checkReader == null)
             {
-                return NotFound("could not find reader with that id");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("could not find reader with that id")
+                });
 
             }
             var bookExemplar = await _context.BookExemplar.FirstOrDefaultAsync(e => e.Book_Id == checkBook.Id_Book);
 
             if (bookExemplar == null || bookExemplar.Books_Count == 0)
             {
-                return BadRequest("book with that id has 0 exemplars");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("book with that id has 0 exemplars")
+                });
             }
             var rental = new RentHistory()
             {
@@ -63,7 +79,7 @@ namespace LibraryWebApi.Controllers
             bookExemplar.Books_Count -= 1;
             await _context.SaveChangesAsync();
 
-            return Ok(rental);
+            return Ok();
         }
         [Authorize]
         [HttpGet("getReadersRentals/{id}")]
@@ -72,24 +88,33 @@ namespace LibraryWebApi.Controllers
             var check = await _context.RentHistory.FirstOrDefaultAsync(r => r.Id_Reader == id);
             if (check == null)
             {
-                return NotFound("this reader has no rentals");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("reader has no rentals")
+                });
             }
-            return Ok(_context.RentHistory.Where(r => r.Id_Reader == check.Id_Reader));
+            return new OkObjectResult(new
+            {
+                rentals = _context.RentHistory.Where(r => r.Id_Reader == check.Id_Reader)
+            });
         }
         [Authorize]
         [HttpPost("returnRent{rentId}")]
         public async Task<IActionResult> ReturnRent(int rentId)
         {
-            var checkRent = await _context.RentHistory.FirstOrDefaultAsync(r => r.id_Rent== rentId);
+            var checkRent = await _context.RentHistory.FirstOrDefaultAsync(r => r.id_Rent == rentId);
             if (checkRent == null)
             {
-                return NotFound("not found rent with this id");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("not found rent with this id")
+                });
             }
             var bookExemplar = await _context.BookExemplar.FirstOrDefaultAsync(e => e.Book_Id == checkRent.Id_Book);
             checkRent.Rental_Status = "да";
             bookExemplar.Books_Count += 1;
             await _context.SaveChangesAsync();
-            return Ok("book successfully returned");
+            return Ok();
         }
         [Authorize]
         [HttpGet("getCurrentRentals")]
@@ -98,9 +123,16 @@ namespace LibraryWebApi.Controllers
             bool admin = Check.IsUserAdmin();
             if (!admin)
             {
-                return Unauthorized("only admin could do this");
+                return new OkObjectResult(new
+                {
+                    error = Unauthorized("only admin could do this")
+                });
+
             }
-            return Ok(_context.RentHistory.Where(r => r.Rental_Status == "нет"));
+            return new OkObjectResult(new
+            {
+                rentals = _context.RentHistory.Where(r => r.Rental_Status == "нет")
+            });
         }
         [Authorize]
         [HttpGet("getBookRentals/{id}")]
@@ -109,20 +141,32 @@ namespace LibraryWebApi.Controllers
             bool admin = Check.IsUserAdmin();
             if (!admin)
             {
-                return Unauthorized("only admin could do this");
+                return new OkObjectResult(new
+                {
+                    error = Unauthorized("only admin could do this")
+                });
+
             }
-            var check= await _context.Books.FirstOrDefaultAsync(b=>b.Id_Book==id);
+            var check = await _context.Books.FirstOrDefaultAsync(b => b.Id_Book == id);
             if (check == null)
             {
-                return NotFound("book with that id does`nt exist");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("not found book with this id")
+                });
             }
             var rentCheck = await _context.RentHistory.FirstOrDefaultAsync(r => r.Id_Book == check.Id_Book);
             if (check == null)
             {
-                return NotFound("rent with that book id does`nt exist");
+                return new OkObjectResult(new
+                {
+                    error = NotFound("not found rent with this book id")
+                });
             }
-            return Ok(_context.RentHistory.Where(r=>r.Id_Book == check.Id_Book));
+            return new OkObjectResult(new
+            {
+                rentals = _context.RentHistory.Where(r => r.Id_Book == check.Id_Book)
+            });
         }
-
     }
 }
