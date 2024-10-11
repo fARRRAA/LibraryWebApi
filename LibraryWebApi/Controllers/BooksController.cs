@@ -6,6 +6,7 @@ using LibraryWebApi.Requests;
 using Microsoft.AspNetCore.Authorization;
 using LibraryWebApi.Controllers;
 using static System.Reflection.Metadata.BlobBuilder;
+using System.Linq;
 //using LibraryWebApi.Requests;
 namespace LibraryWebApi.Controllers
 {
@@ -26,21 +27,41 @@ namespace LibraryWebApi.Controllers
 
         [HttpGet]
         [Route("getAllBooks")]
-        public async Task<IActionResult> GetAllBooks([FromQuery] string? author, [FromQuery] string? genre, [FromQuery] int? year)
+        public async Task<IActionResult> GetAllBooks([FromQuery] string? author, [FromQuery] string? genre, [FromQuery] int? year, [FromQuery] int? page,
+        [FromQuery] int? pageSize)
         {
+            IQueryable<Books> query = _context.Books.Include(b => b.Genre);
+
             if (!string.IsNullOrEmpty(author))
             {
+                query = query.Where(b => b.Author == author);
+            }
+
+            if (!string.IsNullOrEmpty(genre))
+            {
+                query = query.Where(b => b.Genre.Name == genre);
+            }
+
+            if (year.HasValue)
+            {
+                query = query.Where(b => b.Year.Year == year.Value);
+            }
+            var totalBooks = await query.CountAsync();
+            if(page.HasValue&& pageSize.HasValue)
+            {
+                var books = await query.Skip((int)((page - 1) * (int)pageSize)).Take((int)pageSize).ToListAsync();
+
                 return new OkObjectResult(new
                 {
-                    books = _context.Books.Where(b=>b.Author==author)
+                    books,
+                    totalBooks,
+                    currentPage = page,
+                    totalPages = (int)Math.Ceiling((decimal)(totalBooks / pageSize))
                 });
             }
-            var books = await _context.Books.Include(b=>b.Genre).ToListAsync();
             return new OkObjectResult(new
             {
-                books = books,
-                status = true
-
+                books=query
             });
         }
         [Authorize]

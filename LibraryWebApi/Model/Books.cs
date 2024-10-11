@@ -5,19 +5,18 @@ namespace LibraryWebApi.Model
 {
     public class Books
     {
-
         [Key]
         public int Id_Book { get; set; }
+
         public string Author { get; set; }
 
-        [ForeignKey("Genres")]
+        [ForeignKey(nameof(Genre))]
         public int Id_Genre { get; set; }
-        [NotMapped]
+
         public Genre Genre { get; set; }
+
         public string Title { get; set; }
         public string Description { get; set; }
         public DateTime Year { get; set; }
-
-        //public Genre Genre { get; set; }
     }
 }

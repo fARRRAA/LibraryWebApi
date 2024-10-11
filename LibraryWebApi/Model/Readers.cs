@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Reflection.PortableExecutable;
 namespace LibraryWebApi.Model
 {
     public class Readers
@@ -10,9 +11,8 @@ namespace LibraryWebApi.Model
         public DateTime Date_Birth { get; set; }
         public string Login { get; set; }
         public string Password { get; set; }
-        [ForeignKey("Roles")]
+        [ForeignKey(nameof(Role))]
         public int? Id_Role { get; set; } = 2;
-        [NotMapped]
         public Roles Role { get; set; }
 
     }

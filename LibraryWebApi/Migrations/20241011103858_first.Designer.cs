@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LibraryWebApi.Migrations
 {
     [DbContext(typeof(LibraryWebApiDb))]
-    [Migration("20241010190712_first")]
+    [Migration("20241011103858_first")]
     partial class first
     {
         /// <inheritdoc />
@@ -44,6 +44,8 @@ namespace LibraryWebApi.Migrations
 
                     b.HasKey("Exemplar_Id");
 
+                    b.HasIndex("Book_Id");
+
                     b.ToTable("BookExemplar");
                 });
 
@@ -74,6 +76,8 @@ namespace LibraryWebApi.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id_Book");
+
+                    b.HasIndex("Id_Genre");
 
                     b.ToTable("Books");
                 });
@@ -123,6 +127,8 @@ namespace LibraryWebApi.Migrations
 
                     b.HasKey("Id_User");
 
+                    b.HasIndex("Id_Role");
+
                     b.ToTable("Readers");
                 });
 
@@ -155,6 +161,10 @@ namespace LibraryWebApi.Migrations
 
                     b.HasKey("id_Rent");
 
+                    b.HasIndex("Id_Book");
+
+                    b.HasIndex("Id_Reader");
+
                     b.ToTable("RentHistory");
                 });
 
@@ -173,6 +183,56 @@ namespace LibraryWebApi.Migrations
                     b.HasKey("Id_Role");
 
                     b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("LibraryWebApi.Model.BookExemplar", b =>
+                {
+                    b.HasOne("LibraryWebApi.Model.Books", "Book")
+                        .WithMany()
+                        .HasForeignKey("Book_Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+                });
+
+            modelBuilder.Entity("LibraryWebApi.Model.Books", b =>
+                {
+                    b.HasOne("LibraryWebApi.Model.Genre", "Genre")
+                        .WithMany()
+                        .HasForeignKey("Id_Genre")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Genre");
+                });
+
+            modelBuilder.Entity("LibraryWebApi.Model.Readers", b =>
+                {
+                    b.HasOne("LibraryWebApi.Model.Roles", "Role")
+                        .WithMany()
+                        .HasForeignKey("Id_Role");
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("LibraryWebApi.Model.RentHistory", b =>
+                {
+                    b.HasOne("LibraryWebApi.Model.Books", "Book")
+                        .WithMany()
+                        .HasForeignKey("Id_Book")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LibraryWebApi.Model.Readers", "Reader")
+                        .WithMany()
+                        .HasForeignKey("Id_Reader")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("Reader");
                 });
 #pragma warning restore 612, 618
         }
