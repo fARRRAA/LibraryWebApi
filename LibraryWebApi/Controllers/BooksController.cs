@@ -32,7 +32,6 @@ namespace LibraryWebApi.Controllers
         [FromQuery] int? pageSize)
         {
             var books = _books.GetAllBooks(author, genre, year, page, pageSize);
-            Task.Delay(5000).Wait();
             return new OkObjectResult(new
             {
                 books = books

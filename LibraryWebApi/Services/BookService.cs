@@ -47,9 +47,10 @@ namespace LibraryWebApi.Services
             if (page.HasValue && pageSize.HasValue)
             {
                 books = query.Skip((int)((page - 1) * (int)pageSize)).Take((int)pageSize).ToList();
+                return books;
             }
 
-            return _context.Books.ToList();
+           return query.ToList();
 
         }
 

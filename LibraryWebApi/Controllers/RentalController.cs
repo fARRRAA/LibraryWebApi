@@ -1,8 +1,10 @@
 ﻿using LibraryWebApi.DataBaseContext;
+using LibraryWebApi.Interfaces;
 using LibraryWebApi.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.PortableExecutable;
 
 namespace LibraryWebApi.Controllers
 {
@@ -10,19 +12,22 @@ namespace LibraryWebApi.Controllers
     [Route("api/[controller]")]
     public class RentalController : Controller
     {
-        readonly LibraryWebApiDb _context;
         public Check Check;
         private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public RentalController(LibraryWebApiDb context, IHttpContextAccessor httpContextAccessor)
+        private readonly IBookService _book;
+        private readonly IReaderService _reader;
+        private readonly IRentService _rent;
+        public RentalController(IReaderService reader, IBookService book, LibraryWebApiDb context, IHttpContextAccessor httpContextAccessor, IRentService rentService)
         {
-            _context = context;
-            _httpContextAccessor = httpContextAccessor;
             Check = new Check(httpContextAccessor);
+            _reader = reader;
+            _book = book;
+            _rent = rentService;
+
         }
         [Authorize]
         [HttpPost("RentBookById/{id}")]
-        public async Task<IActionResult> RentBookById(int id, int readerId, int rentalTime)
+        public async Task<IActionResult> RentBookById(int bookId, int readerId, int rentalTime)
         {
             if (string.IsNullOrWhiteSpace(Convert.ToString(readerId)) || string.IsNullOrWhiteSpace(Convert.ToString(rentalTime)))
             {
@@ -31,8 +36,7 @@ namespace LibraryWebApi.Controllers
                     error = BadRequest("fill in all fields")
                 });
             }
-            var checkRent = await _context.RentHistory.FirstOrDefaultAsync(r => r.Id_Reader == readerId && r.Id_Book == id);
-            if (checkRent != null)
+            if (_rent.GetCurrentRentals().Any(r => r.Id_Reader == readerId && r.Id_Book == bookId))
             {
                 return new OkObjectResult(new
                 {
@@ -40,24 +44,20 @@ namespace LibraryWebApi.Controllers
                 });
 
             }
-            var checkBook = await _context.Books.FirstOrDefaultAsync(b => b.Id_Book == id);
-            if (checkBook == null)
+            if (!_book.BookExists(bookId))
             {
                 return new OkObjectResult(new
                 {
-                    error = NotFound("could not find book with that id")
+                    error = NotFound("not found book with this id")
                 });
             }
-            var checkReader = await _context.Readers.FirstOrDefaultAsync(r => r.Id_User == readerId);
-            if (checkReader == null)
+            if (!_reader.GetAll().Any(r => r.Id_User == bookId))
             {
                 return new OkObjectResult(new
                 {
-                    error = NotFound("could not find reader with that id")
+                    error = NotFound("reader with that id does not exists")
                 });
-
             }
-            var bookExemplar = await _context.BookExemplar.FirstOrDefaultAsync(e => e.Book_Id == checkBook.Id_Book);
 
             if (bookExemplar == null || bookExemplar.Books_Count == 0)
             {
@@ -81,41 +81,41 @@ namespace LibraryWebApi.Controllers
 
             return Ok();
         }
-        [Authorize]
-        [HttpGet("getReadersRentals/{id}")]
-        public async Task<IActionResult> GetReadersRentals(int id)
-        {
-            var check = await _context.RentHistory.FirstOrDefaultAsync(r => r.Id_Reader == id);
-            if (check == null)
-            {
-                return new OkObjectResult(new
-                {
-                    error = NotFound("reader has no rentals")
-                });
-            }
-            return new OkObjectResult(new
-            {
-                rentals = _context.RentHistory.Where(r => r.Id_Reader == check.Id_Reader)
-            });
-        }
-        [Authorize]
-        [HttpPost("returnRent{rentId}")]
-        public async Task<IActionResult> ReturnRent(int rentId)
-        {
-            var checkRent = await _context.RentHistory.FirstOrDefaultAsync(r => r.id_Rent == rentId);
-            if (checkRent == null)
-            {
-                return new OkObjectResult(new
-                {
-                    error = NotFound("not found rent with this id")
-                });
-            }
-            var bookExemplar = await _context.BookExemplar.FirstOrDefaultAsync(e => e.Book_Id == checkRent.Id_Book);
-            checkRent.Rental_Status = "да";
-            bookExemplar.Books_Count += 1;
-            await _context.SaveChangesAsync();
-            return Ok();
-        }
+        //[Authorize]
+        //[HttpGet("getReadersRentals/{id}")]
+        //public async Task<IActionResult> GetReadersRentals(int id)
+        //{
+        //    var check = await _context.RentHistory.FirstOrDefaultAsync(r => r.Id_Reader == id);
+        //    if (check == null)
+        //    {
+        //        return new OkObjectResult(new
+        //        {
+        //            error = NotFound("reader has no rentals")
+        //        });
+        //    }
+        //    return new OkObjectResult(new
+        //    {
+        //        rentals = _context.RentHistory.Where(r => r.Id_Reader == check.Id_Reader)
+        //    });
+        //}
+        //[Authorize]
+        //[HttpPost("returnRent{rentId}")]
+        //public async Task<IActionResult> ReturnRent(int rentId)
+        //{
+        //    var checkRent = await _context.RentHistory.FirstOrDefaultAsync(r => r.id_Rent == rentId);
+        //    if (checkRent == null)
+        //    {
+        //        return new OkObjectResult(new
+        //        {
+        //            error = NotFound("not found rent with this id")
+        //        });
+        //    }
+        //    var bookExemplar = await _context.BookExemplar.FirstOrDefaultAsync(e => e.Book_Id == checkRent.Id_Book);
+        //    checkRent.Rental_Status = "да";
+        //    bookExemplar.Books_Count += 1;
+        //    await _context.SaveChangesAsync();
+        //    return Ok();
+        //}
         [Authorize]
         [HttpGet("getCurrentRentals")]
         public async Task<IActionResult> GetCurrentRentals()
@@ -131,7 +131,7 @@ namespace LibraryWebApi.Controllers
             }
             return new OkObjectResult(new
             {
-                rentals = _context.RentHistory.Where(r => r.Rental_Status == "нет")
+                rentals = _rent.GetCurrentRentals()
             });
         }
         [Authorize]
@@ -147,16 +147,14 @@ namespace LibraryWebApi.Controllers
                 });
 
             }
-            var check = await _context.Books.FirstOrDefaultAsync(b => b.Id_Book == id);
-            if (check == null)
+            if (!_book.BookExists(id))
             {
                 return new OkObjectResult(new
                 {
                     error = NotFound("not found book with this id")
                 });
             }
-            var rentCheck = await _context.RentHistory.FirstOrDefaultAsync(r => r.Id_Book == check.Id_Book);
-            if (check == null)
+            if (!_rent.BookInRentExists(id))
             {
                 return new OkObjectResult(new
                 {
@@ -165,7 +163,7 @@ namespace LibraryWebApi.Controllers
             }
             return new OkObjectResult(new
             {
-                rentals = _context.RentHistory.Where(r => r.Id_Book == check.Id_Book)
+                rentals = _rent.GetBookRentals(id)
             });
         }
     }
