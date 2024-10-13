@@ -4,6 +4,7 @@ using LibraryWebApi.DataBaseContext;
 using LibraryWebApi.Model;
 using LibraryWebApi.Requests;
 using Microsoft.AspNetCore.Authorization;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace LibraryWebApi.Controllers
 {
     [ApiController]
@@ -21,7 +22,7 @@ namespace LibraryWebApi.Controllers
         }
         [Authorize]
         [HttpGet("getAllReaders")]
-        public async Task<ActionResult> GetAllReaders()
+        public async Task<ActionResult> GetAllReaders([FromQuery] int? page, [FromQuery] int? pageSize)
         {
             bool admin = Check.IsUserAdmin();
             if (!admin)
@@ -31,10 +32,24 @@ namespace LibraryWebApi.Controllers
                     error = Unauthorized("only admin could do this")
                 });
             }
-            var users = _context.Readers.ToListAsync();
+
+            var users = _context.Readers;
+            var totalUsers = await users.CountAsync();
+            if (page.HasValue && pageSize.HasValue)
+            {
+                var usersPaginated = await users.Skip((int)((page - 1) * (int)pageSize)).Take((int)pageSize).ToListAsync();
+
+                return new OkObjectResult(new
+                {
+                    users= usersPaginated,
+                    totalUsers,
+                    currentPage = page,
+                    totalPages = (int)Math.Ceiling((decimal)(totalUsers / pageSize))
+                });
+            }
             return new OkObjectResult(new
             {
-                Readers = users
+                Readers = await users.ToListAsync(),
             });
         }
         [Authorize]
@@ -177,6 +192,19 @@ namespace LibraryWebApi.Controllers
             {
                 books=books
             });
+        }
+        [HttpGet("isAdmin")]
+        public async Task<IActionResult> checkRole()
+        {
+            bool admin = Check.IsUserAdmin();
+            if (!admin)
+            {
+                return new OkObjectResult(new
+                {
+                    error = Unauthorized("you not admin")
+                });
+            }
+            return Ok("you admin");
         }
     }
 }

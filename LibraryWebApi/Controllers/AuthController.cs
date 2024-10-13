@@ -80,7 +80,9 @@ namespace LibraryWebApi.Controllers
             }
             var token = GenerateToken(check);
             var httpContext = _httpContextAccessor.HttpContext;
-            httpContext.Response.Headers.Add("Authorization", $"{token}");
+            httpContext.Response.Cookies.Append("wild-cookies", token);
+            //httpContext.Response.Headers.Append("Authorization", token);
+
             return new OkObjectResult(new
             {
                 token = token

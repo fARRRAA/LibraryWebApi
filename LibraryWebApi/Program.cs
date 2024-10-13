@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.CookiePolicy;
+using LibraryWebApi.Interfaces;
+using LibraryWebApi.Services;
+using LibraryWebApi.Controllers;
 namespace LibraryWebApi
 {
     public class Program
@@ -16,6 +19,12 @@ namespace LibraryWebApi
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddScoped<Check>();
+
+            builder.Services.AddScoped<IBookService, BookService>();
+            builder.Services.AddScoped<IGenreService, GenreService>();
+
+
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
@@ -33,18 +42,18 @@ namespace LibraryWebApi
                     {
                         OnMessageReceived = context =>
                         {
-                            var authorizationHeader = context.Request.Headers["Authorization"].ToString();
-                            if (!string.IsNullOrEmpty(authorizationHeader) && authorizationHeader.StartsWith("Bearer "))
-                            {
-                                context.Token = authorizationHeader.Substring("Bearer ".Length).Trim();
-                            }
+                            //var authorizationHeader = context.Request.Headers["Authorization"].ToString();
+                            //if (!string.IsNullOrEmpty(authorizationHeader) && authorizationHeader.StartsWith("Bearer "))
+                            //{
+                            context.Token = context.Request.Cookies["wild-cookies"];
+
+                            //}
                             return Task.CompletedTask;
                         }
-                    
+
                     };
 
                 });
-
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAllOrigins",
