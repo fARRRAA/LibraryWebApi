@@ -16,11 +16,13 @@ namespace LibraryWebApi.Controllers
         private readonly IHttpContextAccessor _httpContextAccessor;
         public Check Check;
         private readonly IReaderService _reader;
-        public ReaderController(IHttpContextAccessor httpContextAccessor, IReaderService readerService)
+        private readonly IRentService _rent;
+        public ReaderController(IHttpContextAccessor httpContextAccessor, IReaderService readerService, IRentService rent)
         {
             _httpContextAccessor = httpContextAccessor;
             Check = new Check(httpContextAccessor);
             _reader = readerService;
+            _rent = rent;
         }
         [Authorize]
         [HttpGet("getAllReaders")]
@@ -145,33 +147,29 @@ namespace LibraryWebApi.Controllers
                 reader = _reader.GetReaderById(id)
             });
         }
-        //[Authorize]
-        //[HttpGet("getReadersBooks/{id}")]
-        //public async Task<IActionResult> GetReadersRentals(int id)
-        //{
-        //    var check = await _context.Readers.FirstOrDefaultAsync(r => r.Id_User == id);
-        //    if (check == null)
-        //    {
-        //        return new OkObjectResult(new
-        //        {
-        //            error = NotFound("reader with that id don`t exists")
-        //        });
-        //    }
-        //    var checkRents = await _context.RentHistory.FirstOrDefaultAsync(r => r.Id_Reader == id);
-        //    if (checkRents == null)
-        //    {
-        //        return new OkObjectResult(new
-        //        {
-        //            error = NotFound("reader has no rentals")
-        //        });
-        //    }
-        //    var bookIds = await _context.RentHistory.Where(r => r.Id_Reader == id).Select(r => r.Id_Book).ToListAsync();
-        //    var books = await _context.Books.Where(b => bookIds.Contains(b.Id_Book)).ToListAsync();
-        //    return new OkObjectResult(new
-        //    {
-        //        books = books
-        //    });
-        //}
+        [Authorize]
+        [HttpGet("getReadersBooks/{id}")]
+        public async Task<IActionResult> GetReadersRentals(int id)
+        {
+            if (!_reader.GetAll().Any(r => r.Id_User == id))
+            {
+                return new OkObjectResult(new
+                {
+                    error = NotFound("reader with that id don`t exists")
+                });
+            }
+            if (_rent.ReaderInRent(id))
+            {
+                return new OkObjectResult(new
+                {
+                    error = NotFound("reader has no rentals")
+                });
+            }
+            return new OkObjectResult(new
+            {
+                books = _reader.GetReadersRentals(id)
+            });
+        }
         [HttpGet("isAdmin")]
         public async Task<IActionResult> checkRole()
         {

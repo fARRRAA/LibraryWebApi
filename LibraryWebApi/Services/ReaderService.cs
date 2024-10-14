@@ -65,7 +65,7 @@ namespace LibraryWebApi.Services
 
         public List<RentHistory> GetReadersRentals(int id)
         {
-            throw new NotImplementedException();
+            return _context.RentHistory.Where(r=>r.Id_Reader==id).Include(r=>r.Reader).Include(r=>r.Book).ToList();
         }
 
         public bool ReaderExists(string login)

@@ -25,6 +25,7 @@ namespace LibraryWebApi
             builder.Services.AddScoped<IGenreService, GenreService>();
             builder.Services.AddScoped<IReaderService, ReaderService>();
             builder.Services.AddScoped<IRentService, RentService>();
+            builder.Services.AddScoped<IBookExemplarService, BookExemplarService>();
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
