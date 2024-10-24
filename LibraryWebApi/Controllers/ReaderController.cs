@@ -28,10 +28,10 @@ namespace LibraryWebApi.Controllers
         [HttpGet("getAllReaders")]
         public async Task<ActionResult> GetAllReaders([FromQuery] int? page, [FromQuery] int? pageSize)
         {
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
+            var admin = Check.IsUserAdmin();
+            if (admin!="admin")
             {
-                return new OkObjectResult(new
+                return new UnauthorizedObjectResult(new
                 {
                     error = Unauthorized("only admin could do this")
                 });
@@ -45,24 +45,24 @@ namespace LibraryWebApi.Controllers
         [HttpPost("addNewReader")]
         public async Task<IActionResult> AddNewReader([FromQuery]createReader reader)
         {
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
+            var admin = Check.IsUserAdmin();
+            if (admin != "admin")
             {
-                return new OkObjectResult(new
+                return new UnauthorizedObjectResult(new
                 {
                     error = Unauthorized("only admin could do this")
                 });
             }
             if (_reader.ReaderExists(reader.Login))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("reader with that login and password already exists")
                 });
             }
             if (string.IsNullOrWhiteSpace(reader.Name) || string.IsNullOrWhiteSpace(reader.Password) || string.IsNullOrWhiteSpace(reader.Login) || string.IsNullOrWhiteSpace(reader.Date_Birth.ToString()))
             {
-                return new OkObjectResult(new
+                return new BadRequestObjectResult(new
                 {
                     error = BadRequest("fill in all fields")
                 });
@@ -75,24 +75,24 @@ namespace LibraryWebApi.Controllers
         [HttpPut("updateReaderById/{id}")]
         public async Task<IActionResult> UpdateReaderById(int id, [FromQuery]createReader reader)
         {
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
+            var admin = Check.IsUserAdmin();
+            if (admin != "admin")
             {
-                return new OkObjectResult(new
+                return new UnauthorizedObjectResult(new
                 {
                     error = Unauthorized("only admin could do this")
                 });
             }
             if (!_reader.GetAll().Any(r => r.Id_User == id))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("reader with that id does not exists")
                 });
             }
             if (string.IsNullOrWhiteSpace(reader.Name) || string.IsNullOrWhiteSpace(reader.Password) || string.IsNullOrWhiteSpace(reader.Login) || string.IsNullOrWhiteSpace(reader.Date_Birth.ToString()))
             {
-                return new OkObjectResult(new
+                return new BadRequestObjectResult(new
                 {
                     error = BadRequest("fill in all fields")
                 });
@@ -104,17 +104,17 @@ namespace LibraryWebApi.Controllers
         [HttpDelete("deleteReaderById/{id}")]
         public async Task<IActionResult> DeleteReaderById(int id)
         {
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
+            var admin = Check.IsUserAdmin();
+            if (admin != "admin")
             {
-                return new OkObjectResult(new
+                return new UnauthorizedObjectResult(new
                 {
                     error = Unauthorized("only admin could do this")
                 });
             }
             if (!_reader.GetAll().Any(r => r.Id_User == id))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("reader with that id does not exists")
                 });
@@ -126,17 +126,17 @@ namespace LibraryWebApi.Controllers
         [HttpGet("getReaderById{id}")]
         public async Task<IActionResult> GetReaderById(int id)
         {
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
+            var admin = Check.IsUserAdmin();
+            if (admin != "admin")
             {
-                return new OkObjectResult(new
+                return new UnauthorizedObjectResult(new
                 {
                     error = Unauthorized("only admin could do this")
                 });
             }
             if (!_reader.GetAll().Any(r => r.Id_User == id))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("reader with that id does not exists")
                 });
@@ -153,14 +153,14 @@ namespace LibraryWebApi.Controllers
         {
             if (!_reader.GetAll().Any(r => r.Id_User == id))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("reader with that id don`t exists")
                 });
             }
             if (_rent.ReaderInRent(id))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("reader has no rentals")
                 });
@@ -173,12 +173,12 @@ namespace LibraryWebApi.Controllers
         [HttpGet("isAdmin")]
         public async Task<IActionResult> checkRole()
         {
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
+            var admin = Check.IsUserAdmin();
+            if (admin != "admin")
             {
-                return new OkObjectResult(new
+                return new UnauthorizedObjectResult(new
                 {
-                    error = Unauthorized("you not admin")
+                    error = Unauthorized("only admin could do this")
                 });
             }
             return Ok("you admin");

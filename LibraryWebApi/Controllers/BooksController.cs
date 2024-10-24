@@ -40,12 +40,12 @@ namespace LibraryWebApi.Controllers
         [Authorize]
         [HttpPost]
         [Route("addNewBook")]
-        public async Task<IActionResult> AddNewBook([FromQuery] CreateBook book)
+        public async Task<IActionResult> AddNewBook([FromBody] CreateBook book)
         {
 
             if (string.IsNullOrWhiteSpace(book.Title) || string.IsNullOrWhiteSpace(book.Author) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Id_Genre)) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Year)))
             {
-                return new OkObjectResult(new
+                return new BadRequestObjectResult(new
                 {
                     error = BadRequest("fill in all fields")
                 });
@@ -53,36 +53,30 @@ namespace LibraryWebApi.Controllers
 
             if (_books.GetAll().Any(b => b.Author == book.Author && b.Title == book.Title))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("this book is already exists")
                 });
             }
+            await _books.AddNewBook(book);
             return Ok();
         }
         [Authorize]
         [HttpPut]
         [Route("updateBook/{id}")]
-        public async Task<IActionResult> UpdateBook(int id, [FromQuery] CreateBook book)
+        public async Task<IActionResult> UpdateBook(int id, [FromBody] CreateBook book)
         {
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
-            {
-                return new OkObjectResult(new
-                {
-                    error = Unauthorized("only admin could do this")
-                });
-            }
+
             if (!_books.BookExists(id))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("book with that id don`t exists")
                 });
             }
             if (string.IsNullOrWhiteSpace(book.Title) || string.IsNullOrWhiteSpace(book.Author) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Id_Genre)) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Year)))
             {
-                return new OkObjectResult(new
+                return new BadRequestObjectResult(new
                 {
                     error = BadRequest("fill in all fields")
                 });
@@ -98,17 +92,9 @@ namespace LibraryWebApi.Controllers
         public async Task<ActionResult> DeleteBook(int id)
         {
 
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
-            {
-                return new OkObjectResult(new
-                {
-                    error = Unauthorized("only admin could do this")
-                });
-            }
             if (!_books.BookExists(id))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("book with that id don`t exists")
                 });
@@ -122,7 +108,7 @@ namespace LibraryWebApi.Controllers
         {
             if (!_genre.GenreExists(id))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("genre with that id don`t exists")
                 });
@@ -141,7 +127,7 @@ namespace LibraryWebApi.Controllers
 
             if (!_books.GetAll().Any(b => b.Author == author))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("not found book with that author")
                 });
@@ -154,19 +140,20 @@ namespace LibraryWebApi.Controllers
         }
         [HttpGet]
         [Route("getBooksByName/{name}")]
-        public async Task<IActionResult> GetBooksByName(string name)
+        public async Task<IActionResult> GetBooksByName(string name, int? page, int? pageSize)
         {
-            ;
-            if (!_books.GetAll().Any(b => b.Title == name))
+
+            var books = _books.GetBooksByName(name,page,pageSize);
+            if(books.Count == 0)
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("not found book with that name")
                 });
             }
             return new OkObjectResult(new
             {
-                books = _books.GetBooksByName(name)
+                books = books
             });
         }
         [HttpGet]
@@ -186,7 +173,7 @@ namespace LibraryWebApi.Controllers
 
             if (!_books.GetAllExemplars().Any(b => b.Book_Id == bookId))
             {
-                return new OkObjectResult(new
+                return new BadRequestObjectResult(new
                 {
                     error = BadRequest("could not find exemplars of this book")
                 });
@@ -202,7 +189,7 @@ namespace LibraryWebApi.Controllers
         {
             if (!_books.BookExists(id))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound(new { message = $"Книга с ID {id} не найдена." })
                 });

@@ -44,13 +44,10 @@ namespace LibraryWebApi
                     {
                         OnMessageReceived = context =>
                         {
-                            //var authorizationHeader = context.Request.Headers["Authorization"].ToString();
-                            //if (!string.IsNullOrEmpty(authorizationHeader) && authorizationHeader.StartsWith("Bearer "))
-                            //{
-                            context.Token = context.Request.Cookies["wild-cookies"];
-
-                            //}
+                            var authorizationHeader = context.Request.Headers["Authorization"].ToString();
+                            context.Token = authorizationHeader.Substring("Bearer ".Length).Trim();
                             return Task.CompletedTask;
+
                         }
 
                     };

@@ -12,7 +12,7 @@ namespace LibraryWebApi.Interfaces
         public Task DeleteBook(int id);
         public List<Books> GetBooksByGenre(int id);
         public List<Books> GetBooksByAuthor(string author);
-        public List<Books> GetBooksByName(string name);
+        public List<Books> GetBooksByName(string name, int? page, int? pageSize);
         public List<BookExemplar> GetAllExemplars();
         public BookExemplar GetExemplar(int bookId);
         public Books GetBookById(int id);

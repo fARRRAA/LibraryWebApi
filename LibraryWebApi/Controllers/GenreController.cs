@@ -36,18 +36,17 @@ namespace LibraryWebApi.Controllers
         [Route("addNewGenre")]
         public async Task<IActionResult> AddNewGenre([FromQuery] CreateGenre createdGenre)
         {
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
+            var admin = Check.IsUserAdmin();
+            if (admin != "admin")
             {
-                return new OkObjectResult(new
+                return new UnauthorizedObjectResult(new
                 {
                     error = Unauthorized("only admin could do this")
                 });
-
             }
             if (string.IsNullOrWhiteSpace(createdGenre.Name))
             {
-                return new OkObjectResult(new
+                return new BadRequestObjectResult(new
                 {
                     error = BadRequest("fill in all fields")
 
@@ -55,7 +54,7 @@ namespace LibraryWebApi.Controllers
             }
             if (_genre.GetAllGenres().Any(g=>g.Name== createdGenre.Name))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("genre with that name already exists")
                 });
@@ -68,25 +67,24 @@ namespace LibraryWebApi.Controllers
         [Route("updateGenreById/{id}")]
         public async Task<IActionResult> UpdateGenreById(int id, [FromQuery] CreateGenre createdGenre)
         {
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
+            var admin = Check.IsUserAdmin();
+            if (admin != "admin")
             {
-                return new OkObjectResult(new
+                return new UnauthorizedObjectResult(new
                 {
                     error = Unauthorized("only admin could do this")
                 });
-
             }
             if (string.IsNullOrWhiteSpace(createdGenre.Name))
             {
-                return new OkObjectResult(new
+                return new BadRequestObjectResult(new
                 {
                     error = BadRequest("fill in all fields")
                 });
             }
             if (!_genre.GenreExists(id))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("genre with that id do not exists")
                 });
@@ -99,18 +97,17 @@ namespace LibraryWebApi.Controllers
         [Route("deleteGenreById/{id}")]
         public async Task<IActionResult> DeleteGenreById(int id)
         {
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
+            var admin = Check.IsUserAdmin();
+            if (admin != "admin")
             {
-                return new OkObjectResult(new
+                return new UnauthorizedObjectResult(new
                 {
                     error = Unauthorized("only admin could do this")
                 });
-
             }
             if (!_genre.GenreExists(id))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("genre with that id do not exists")
                 });

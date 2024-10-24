@@ -16,27 +16,28 @@ namespace LibraryWebApi.Controllers
         readonly LibraryWebApiDb _context;
         private string key = "secretkeyildarsecretkeyildarsecretkeyildar";
         private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public AuthController(LibraryWebApiDb context, IHttpContextAccessor httpContextAccessor)
+        private readonly Check _check;
+        public AuthController(LibraryWebApiDb context, IHttpContextAccessor httpContextAccessor,Check check)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
+            _check = check;
         }
 
         [HttpPost("registerReader")]
-        public async Task<ActionResult> Register(createReader reader)
+        public async Task<ActionResult> Register([FromBody]createReader reader)
         {
             var check = await _context.Readers.FirstOrDefaultAsync(r => r.Login == reader.Login && r.Password == reader.Password);
             if (check != null)
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("reader with that login and password already exists")
                 });
             }
             if (string.IsNullOrWhiteSpace(reader.Name) || string.IsNullOrWhiteSpace(reader.Password) || string.IsNullOrWhiteSpace(reader.Login) || string.IsNullOrWhiteSpace(reader.Date_Birth.ToString()))
             {
-                return new OkObjectResult(new
+                return new BadRequestObjectResult(new
                 {
                     error = BadRequest("fill in all fields")
                 });
@@ -54,9 +55,12 @@ namespace LibraryWebApi.Controllers
             };
             await _context.Readers.AddAsync(Reader);
             await _context.SaveChangesAsync();
+            var token = GenerateToken(Reader);
+            var httpContext = _httpContextAccessor.HttpContext;
+            httpContext.Response.Cookies.Append("wild-cookies", token);
             return new OkObjectResult(new
             {
-                reader = reader
+                token = token
             });
         }
         [HttpGet("loginReader")]
@@ -65,7 +69,7 @@ namespace LibraryWebApi.Controllers
             var check = await _context.Readers.FirstOrDefaultAsync(r => r.Login == login);
             if (check == null)
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("reader not found")
                 });
@@ -73,7 +77,7 @@ namespace LibraryWebApi.Controllers
             //var res = Verify(password, check.Password);
             if (password != check.Password)
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("wrong password")
                 });
@@ -81,16 +85,21 @@ namespace LibraryWebApi.Controllers
             var token = GenerateToken(check);
             var httpContext = _httpContextAccessor.HttpContext;
             httpContext.Response.Cookies.Append("wild-cookies", token);
-            //httpContext.Response.Headers.Append("Authorization", token);
+            //Response.Headers.Add("Authorization", $"Bearer {token}");
 
             return new OkObjectResult(new
             {
                 token = token
             });
         }
-
-
-
+        [HttpGet("userData/{token}")]
+        public async Task<IActionResult> GetUserData(string token)
+        {
+            return new OkObjectResult(new
+            {
+                user= _check.GetUser(token)
+            });
+        }
         public string Generate(string password) => BCrypt.Net.BCrypt.EnhancedHashPassword(password);
         public bool Verify(string password, string hashPassword) => BCrypt.Net.BCrypt.EnhancedVerify(password, hashPassword);
 
@@ -99,7 +108,7 @@ namespace LibraryWebApi.Controllers
             var claims = new List<Claim>
             {
                 new(ClaimTypes.Authentication, reader.Id_User.ToString()),
-                new(ClaimTypes.Role, reader.Id_Role switch { 1 => "admin", 2 => "reader" })
+                new(ClaimTypes.Role, reader.Id_Role switch { 1 => "admin", 2 => "user" })
             };
 
             var signingCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),

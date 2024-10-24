@@ -5,6 +5,7 @@ using LibraryWebApi.Model;
 using LibraryWebApi.Requests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace LibraryWebApi.Services
 {
@@ -53,7 +54,17 @@ namespace LibraryWebApi.Services
            return query.ToList();
 
         }
-
+        public List<Books> GetBooksByName(string name, int? page, int? pageSize)
+        {
+            var nameParts = name.ToLower().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var books = _context.Books.Where(i => nameParts.Any(part => i.Title.ToLower().Contains(part))).Include(b => b.Genre).ToList();
+            if (page.HasValue && pageSize.HasValue)
+            {
+                books = books.Skip((int)((page - 1) * (int)pageSize)).Take((int)pageSize).ToList();
+                return books;
+            }
+            return books;
+        }
         public async Task AddNewBook(CreateBook book)
         {
             var Book = new Books()
@@ -106,12 +117,7 @@ namespace LibraryWebApi.Services
             return _context.Books.Where(b=>b.Id_Genre == id).ToList();
         }
 
-        public List<Books> GetBooksByName(string name)
-        {
-            var nameParts = name.ToLower().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            var books = _context.Books.Where(i => nameParts.All(part => i.Author.ToLower().Contains(part))).ToList();
-            return books;
-        }
+
 
         public Books GetBookById(int id)
         {

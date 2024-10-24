@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using LibraryWebApi.Requests;
+using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -13,15 +14,15 @@ namespace LibraryWebApi.Controllers
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public bool IsUserAdmin()
+        public string IsUserAdmin()
         {
-            //var authorizationHeader = _httpContextAccessor.HttpContext.Request.Headers["Authorization"].ToString();
+            var authorizationHeader = _httpContextAccessor.HttpContext.Request.Headers["Authorization"].ToString();
 
-            var cookieValue =  _httpContextAccessor.HttpContext.Request.Cookies["wild-cookies"];
+            var cookieValue = authorizationHeader; //_httpContextAccessor.HttpContext.Request.Cookies["wild-cookies"];
 
             if (string.IsNullOrEmpty(cookieValue))
             {
-                return false;
+                return "";
             }
 
             var handler = new JwtSecurityTokenHandler();
@@ -31,13 +32,26 @@ namespace LibraryWebApi.Controllers
                 var userId = jwtToken.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Authentication)?.Value;
                 var role = jwtToken.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Role)?.Value;
 
-                return role == "admin";
+                return role;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error reading token: {ex.Message}");
-                return false;
+                return $"Error reading token: {ex.Message}";
             }
+        }
+        public UserData GetUser(string token)
+        {
+            var cookieValue = token;
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(cookieValue);
+            var userId = jwtToken.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Authentication)?.Value;
+            var role = jwtToken.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Role)?.Value;
+
+            return new UserData()
+            {
+                Id = Convert.ToInt32(userId),
+                Role = role
+            };
         }
     }
 }

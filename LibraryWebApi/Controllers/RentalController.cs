@@ -33,14 +33,14 @@ namespace LibraryWebApi.Controllers
         {
             if (string.IsNullOrWhiteSpace(Convert.ToString(readerId)) || string.IsNullOrWhiteSpace(Convert.ToString(rentalTime)))
             {
-                return new OkObjectResult(new
+                return new BadRequestObjectResult(new
                 {
                     error = BadRequest("fill in all fields")
                 });
             }
             if (_rent.GetCurrentRentals().Any(r => r.Id_Reader == readerId && r.Id_Book == bookId))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("you already rent this book")
                 });
@@ -48,14 +48,14 @@ namespace LibraryWebApi.Controllers
             }
             if (!_book.BookExists(bookId))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("not found book with this id")
                 });
             }
             if (!_reader.GetAll().Any(r => r.Id_User == readerId))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("reader with that id does not exists")
                 });
@@ -63,7 +63,7 @@ namespace LibraryWebApi.Controllers
 
             if (!_exemplar.ExemplarExists(bookId)||_exemplar.ExemplarCounts(bookId)==0)
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("book with that id has 0 exemplars")
                 });
@@ -77,7 +77,7 @@ namespace LibraryWebApi.Controllers
         {
             if (!_rent.ReaderInRent(id))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("reader has no rentals")
                 });
@@ -93,7 +93,7 @@ namespace LibraryWebApi.Controllers
         {
             if (!_rent.RentExists(rentId))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("not found rent with this id")
                 });
@@ -105,14 +105,13 @@ namespace LibraryWebApi.Controllers
         [HttpGet("getCurrentRentals")]
         public async Task<IActionResult> GetCurrentRentals()
         {
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
+            var admin = Check.IsUserAdmin();
+            if (admin != "admin")
             {
-                return new OkObjectResult(new
+                return new UnauthorizedObjectResult(new
                 {
                     error = Unauthorized("only admin could do this")
                 });
-
             }
             return new OkObjectResult(new
             {
@@ -123,25 +122,24 @@ namespace LibraryWebApi.Controllers
         [HttpGet("getBookRentals/{id}")]
         public async Task<IActionResult> GetBookRentals(int id)
         {
-            bool admin = Check.IsUserAdmin();
-            if (!admin)
+            var admin = Check.IsUserAdmin();
+            if (admin != "admin")
             {
-                return new OkObjectResult(new
+                return new UnauthorizedObjectResult(new
                 {
                     error = Unauthorized("only admin could do this")
                 });
-
             }
             if (!_book.BookExists(id))
             {
-                return new OkObjectResult(new
+                return new UnauthorizedObjectResult(new
                 {
-                    error = NotFound("not found book with this id")
+                    error = Unauthorized("not found book with this id")
                 });
             }
             if (!_rent.BookInRentExists(id))
             {
-                return new OkObjectResult(new
+                return new NotFoundObjectResult(new
                 {
                     error = NotFound("not found rent with this book id")
                 });
