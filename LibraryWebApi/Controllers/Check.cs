@@ -18,7 +18,7 @@ namespace LibraryWebApi.Controllers
         {
             var authorizationHeader = _httpContextAccessor.HttpContext.Request.Headers["Authorization"].ToString();
 
-            var cookieValue = authorizationHeader; //_httpContextAccessor.HttpContext.Request.Cookies["wild-cookies"];
+            var cookieValue = _httpContextAccessor.HttpContext.Request.Cookies["wild-cookies"];
 
             if (string.IsNullOrEmpty(cookieValue))
             {

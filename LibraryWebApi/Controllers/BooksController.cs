@@ -1,205 +1,83 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using LibraryWebApi.DataBaseContext;
-using LibraryWebApi.Model;
 using LibraryWebApi.Requests;
-using LibraryWebApi.Interfaces;
-using Microsoft.AspNetCore.Authorization;
-using LibraryWebApi.Controllers;
-using static System.Reflection.Metadata.BlobBuilder;
-using System.Linq;
-//using LibraryWebApi.Requests;
 namespace LibraryWebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class BooksController : Controller
     {
-
-        private readonly IBookService _books;
-        private readonly IGenreService _genre;
-        public Check Check;
-
-        public BooksController(IBookService bookService, Check check, IGenreService genreService)
-        {
-            _books = bookService;
-            Check = check;
-            _genre = genreService;
-        }
+        //private string URL = "https://localhost:7018/api/Books/";
+        //private readonly IBookService _books;
+        //private readonly IGenreService _genre;
+        //public Check Check;
+        //private readonly HttpClient _httpClient;
+        //public BooksController(IBookService bookService, Check check, IGenreService genreService)
+        //{
+        //    _books = bookService;
+        //    Check = check;
+        //    _genre = genreService;
+        //    _httpClient = new HttpClient();
+        //}
         [HttpGet]
-        [Route("getAllBooks")]
+        [Route("all")]
         public async Task<IActionResult> GetAllBooks([FromQuery] string? author, [FromQuery] string? genre, [FromQuery] int? year, [FromQuery] int? page,
         [FromQuery] int? pageSize)
         {
-            var books = _books.GetAllBooks(author, genre, year, page, pageSize);
-            return new OkObjectResult(new
-            {
-                books = books
-            });
+            return null;
         }
-        [Authorize]
         [HttpPost]
-        [Route("addNewBook")]
+        [Route("add")]
         public async Task<IActionResult> AddNewBook([FromBody] CreateBook book)
         {
-
-            if (string.IsNullOrWhiteSpace(book.Title) || string.IsNullOrWhiteSpace(book.Author) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Id_Genre)) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Year)))
-            {
-                return new BadRequestObjectResult(new
-                {
-                    error = BadRequest("fill in all fields")
-                });
-            }
-
-            if (_books.GetAll().Any(b => b.Author == book.Author && b.Title == book.Title))
-            {
-                return new NotFoundObjectResult(new
-                {
-                    error = NotFound("this book is already exists")
-                });
-            }
-            await _books.AddNewBook(book);
-            return Ok();
+            return null;
         }
-        [Authorize]
         [HttpPut]
-        [Route("updateBook/{id}")]
+        [Route("update/{id}")]
         public async Task<IActionResult> UpdateBook(int id, [FromBody] CreateBook book)
         {
-
-            if (!_books.BookExists(id))
-            {
-                return new NotFoundObjectResult(new
-                {
-                    error = NotFound("book with that id don`t exists")
-                });
-            }
-            if (string.IsNullOrWhiteSpace(book.Title) || string.IsNullOrWhiteSpace(book.Author) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Id_Genre)) || string.IsNullOrWhiteSpace(book.Description) || string.IsNullOrWhiteSpace(Convert.ToString(book.Year)))
-            {
-                return new BadRequestObjectResult(new
-                {
-                    error = BadRequest("fill in all fields")
-                });
-
-            }
-            await _books.UpdateBook(id, book);
-            return Ok();
-
+            return null;
         }
-        [Authorize]
         [HttpDelete]
-        [Route("deleteBook/{id}")]
+        [Route("delete/{id}")]
         public async Task<ActionResult> DeleteBook(int id)
         {
-
-            if (!_books.BookExists(id))
-            {
-                return new NotFoundObjectResult(new
-                {
-                    error = NotFound("book with that id don`t exists")
-                });
-            }
-            await _books.DeleteBook(id);
-            return Ok();
+            return null;
         }
         [HttpGet]
-        [Route("getBooksByGenre/{id}")]
+        [Route("genre/{id}")]
         public async Task<IActionResult> GetBooksByGenre(int id)
         {
-            if (!_genre.GenreExists(id))
-            {
-                return new NotFoundObjectResult(new
-                {
-                    error = NotFound("genre with that id don`t exists")
-                });
-            }
-
-            return new OkObjectResult(new
-            {
-                genres = _books.GetBooksByGenre(id)
-            });
+            return null;
         }
         [HttpGet]
-        [Route("getBooksByAuthor/{author}")]
+        [Route("author/{author}")]
         public async Task<IActionResult> GetBooksByAuthor(string author)
         {
-
-
-            if (!_books.GetAll().Any(b => b.Author == author))
-            {
-                return new NotFoundObjectResult(new
-                {
-                    error = NotFound("not found book with that author")
-                });
-            }
-            var books = _books.GetBooksByAuthor(author);
-            return new OkObjectResult(new
-            {
-                books = books
-            });
+            return null;
         }
         [HttpGet]
-        [Route("getBooksByName/{name}")]
+        [Route("name/{name}")]
         public async Task<IActionResult> GetBooksByName(string name, int? page, int? pageSize)
         {
-
-            var books = _books.GetBooksByName(name,page,pageSize);
-            if(books.Count == 0)
-            {
-                return new NotFoundObjectResult(new
-                {
-                    error = NotFound("not found book with that name")
-                });
-            }
-            return new OkObjectResult(new
-            {
-                books = books
-            });
+            return null;
         }
         [HttpGet]
-        [Route("getAllExemplars")]
+        [Route("exemplars")]
         public async Task<IActionResult> GetALlExemplars()
         {
-
-            return new OkObjectResult(new
-            {
-                copies = _books.GetAllExemplars()
-            });
+            return null;
         }
         [HttpGet]
-        [Route("getExemplar/{bookId}")]
+        [Route("exemplar/{bookId}")]
         public async Task<IActionResult> GetExemplar(int bookId)
         {
-
-            if (!_books.GetAllExemplars().Any(b => b.Book_Id == bookId))
-            {
-                return new BadRequestObjectResult(new
-                {
-                    error = BadRequest("could not find exemplars of this book")
-                });
-            }
-            return new OkObjectResult(new
-            {
-                book = _books.GetExemplar(bookId)
-            });
+            return null;
         }
         [HttpGet]
-        [Route("getBookbyId")]
+        [Route("id")]
         public async Task<IActionResult> GetBookbyId(int id)
         {
-            if (!_books.BookExists(id))
-            {
-                return new NotFoundObjectResult(new
-                {
-                    error = NotFound(new { message = $"Книга с ID {id} не найдена." })
-                });
-            }
-
-            return new OkObjectResult(new
-            {
-                book = _books.GetBookById(id)
-            });
-
+            return null;
         }
     }
 }
