@@ -110,6 +110,10 @@ context.ForwardTo("https://localhost:7008/").AddXForwardedHeaders().Send()));
             app.UseWhen(context => context.Request.Path.Value.Contains("/api/Auth"),
 applicationBuilder => applicationBuilder.RunProxy(context =>
 context.ForwardTo("https://localhost:7008/").AddXForwardedHeaders().Send()));
+
+            app.UseWhen(context => context.Request.Path.Value.Contains("/api/Photos"),
+applicationBuilder => applicationBuilder.RunProxy(context =>
+context.ForwardTo("https://localhost:7270/").AddXForwardedHeaders().Send()));
             //app.UseWhen(context => context.Request.Path.Value.Contains("/api/Genre"),
             //    applicationBuilder => applicationBuilder.RunProxy(context =>
             //        context.ForwardTo("http://localhost:5187").AddXForwardedHeaders().Send()));
