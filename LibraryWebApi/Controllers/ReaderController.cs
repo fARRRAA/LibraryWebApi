@@ -60,5 +60,23 @@ namespace LibraryWebApi.Controllers
         {
             return null;
         }
+        [HttpPost("uploadpfp")]
+        public async Task<IActionResult> UploadProfilePhoto(int readerId, IFormFile photo)
+        {
+            return null;
+
+        }
+        [HttpPut("updatepfp/{readerId}")]
+        public async Task<IActionResult> UpdateProfilePhoto(int readerId, IFormFile photo)
+        {
+            return null;
+
+        }
+
+        [HttpDelete("deletepfp/{readerId}")]
+        public async Task<IActionResult> DeleteProfilePhoto(int readerId)
+        {
+            return null;
+        }
     }
 }

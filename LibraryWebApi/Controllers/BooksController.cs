@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using LibraryWebApi.Requests;
+using LibraryWebApi.Model;
 namespace LibraryWebApi.Controllers
 {
     [ApiController]
@@ -78,6 +79,24 @@ namespace LibraryWebApi.Controllers
         public async Task<IActionResult> GetBookbyId(int id)
         {
             return null;
+        }
+        [HttpPost("uploadpfp")]
+        public async Task<IActionResult> UploadProfilePhoto(int readerId, IFormFile photo)
+        {
+            return null;
+        }
+        [HttpPut("updatepfp/{readerId}")]
+        public async Task<IActionResult> UpdateProfilePhoto(int readerId, IFormFile photo)
+        {
+            return null;
+
+        }
+
+        [HttpDelete("deletepfp/{readerId}")]
+        public async Task<IActionResult> DeleteProfilePhoto(int readerId)
+        {
+            return null;
+
         }
     }
 }
